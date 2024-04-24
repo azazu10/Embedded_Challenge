@@ -12,10 +12,13 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   X = CircuitPlayground.motionX();
-  Serial.println(X);
+  Serial.print("Acceleration in X: ");
+  Serial.print(X);
   Y = CircuitPlayground.motionY();
-  Serial.println(Y);
+  Serial.print("\nAcceleration in Y: ");
+  Serial.print(Y);
   Z = CircuitPlayground.motionZ();
+  Serial.print("\nAcceleration in Z: ");
   Serial.println(Z);
   delay(1000);
 }
