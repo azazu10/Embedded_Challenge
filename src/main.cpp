@@ -64,10 +64,10 @@ void loop() {
 
   Serial.print("3Hz: ");
   Serial.print(threeHz);
-  Serial.print("4Hz: ");
+  Serial.print(" 4Hz: ");
   Serial.print(fourHz);
-  Serial.print("5Hz: ");
+  Serial.print(" 5Hz: ");
   Serial.print(fiveHz);
-  Serial.print("6Hz: ");
+  Serial.print(" 6Hz: ");
   Serial.println(sixHz);
 }
