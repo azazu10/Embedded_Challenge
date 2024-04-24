@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <arduinoFFT.h>
 #include <Adafruit_CircuitPlayground.h>
 
 float X, Y, Z;
@@ -21,4 +22,7 @@ void loop() {
   Serial.print("\nAcceleration in Z: ");
   Serial.println(Z);
   delay(1000);
+
+  int Mat [][3] = {{},
+              };
 }
