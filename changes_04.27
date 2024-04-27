@@ -1,0 +1,94 @@
+#include <Adafruit_CircuitPlayground.h>
+//#define FFT_SPEED_OVER_PRECISION /* faster but prone to precision errors */
+//#define USE_AVR_PROGMEM /* stores some stuff in memory ? */
+#include <arduinoFFT.h>
+
+float X, Y, Z;
+
+const uint16_t samples = 64; //This value MUST ALWAYS be a power of 2
+const float signalFrequency = 1000; 
+const float samplingFrequency = 5000;
+const uint8_t amplitude = 100;
+
+float xReal[samples];
+float yReal[samples];
+float zReal[samples];
+float emptyImag[samples];
+
+int index = 0;
+
+// Calculating Fourier Transform
+ArduinoFFT<float> xFFT = ArduinoFFT<float>(xReal, emptyImag, samples, samplingFrequency);
+ArduinoFFT<float> yFFT = ArduinoFFT<float>(yReal, emptyImag, samples, samplingFrequency);
+ArduinoFFT<float> zFFT = ArduinoFFT<float>(zReal, emptyImag, samples, samplingFrequency);
+// ArduinoFFT<float> SixFFT = ArduinoFFT<float>(zReal, emptyImag, samples, samplingFrequency);
+
+void setup() {
+  Serial.begin(9600);
+  CircuitPlayground.begin();
+}
+
+void loop() {
+
+  // Provide acceleration in XYZ directions
+  X = CircuitPlayground.motionX();
+  Y = CircuitPlayground.motionY();
+  Z = CircuitPlayground.motionZ();
+
+  Serial.print("X: ");
+  Serial.print(X);
+  Serial.print("  Y: ");
+  Serial.print(Y);
+  Serial.print("  Z: ");
+  Serial.println(Z);
+
+  // adding acceleration data into arras so FT can be properly calculated
+  xReal[index] = X;
+  yReal[index] = Y;
+  zReal[index] = Z;
+
+  // Increment the index to the next position in the array
+  index++;
+
+
+  //acc = sqrt((X*X)+(Y*Y)+(Z*Z));
+  //Serial.print("\nAcceleration: ");
+  //Serial.print(acc);
+
+  // Hamming window to help mitigate spectral leakage effect
+  xFFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);
+  yFFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);
+  zFFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);
+  // SixFFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);
+
+  xFFT.compute(FFTDirection::Forward);
+  yFFT.compute(FFTDirection::Forward);
+  zFFT.compute(FFTDirection::Forward);
+  // SixFFT.compute(FFTDirection::Forward);
+
+  // Obtaining magnitude of FT
+  xFFT.complexToMagnitude();
+  yFFT.complexToMagnitude();
+  zFFT.complexToMagnitude();
+  // SixFFT.complexToMagnitude();
+
+  // Getting major frequency peak for each direction's FFT result
+  float threeHz = xFFT.majorPeak();
+  float fourHz = yFFT.majorPeak();
+  float fiveHz = zFFT.majorPeak();
+  // float sixHz = SixFFT.majorPeak();
+
+  Serial.print("Hz in X: ");
+  Serial.print(threeHz);
+  Serial.print(" Hz in Y: ");
+  Serial.print(fourHz);
+  Serial.print(" Hz in Z: ");
+  Serial.println(fiveHz);
+  // Serial.print(" 6Hz: ");
+  // Serial.println(sixHz);
+
+  // delay(3000);
+
+}
+
+
