@@ -1,73 +1,110 @@
-#include <Adafruit_CircuitPlayground.h>
-//#define FFT_SPEED_OVER_PRECISION /* faster but prone to precision errors */
-//#define USE_AVR_PROGMEM /* stores some stuff in memory ? */
+#include <Arduino.h>
+// #define FFT_SPEED_OVER_PRECISION
+// #define FFT_SQRT_APPROXIMATION
+// #define USE_AVR_PROGMEM
 #include <arduinoFFT.h>
+#include <Adafruit_CircuitPlayground.h>
 
-float X, Y, Z;
+#define SAMPLES 128           // Must be a power of 2 for FFT
+#define SAMPLING_FREQUENCY 48 // Hz, /2 for nyquest i.e. 24 Hz
 
-const uint16_t samples = 64; //This value MUST ALWAYS be a power of 2
-const float signalFrequency = 1000;
-const float samplingFrequency = 5000;
-const uint8_t amplitude = 100;
+float samples = SAMPLES;
 
-float xReal[samples];
-float yReal[samples];
-float zReal[samples];
-float emptyImag[samples];
+float vReal[SAMPLES];
+float vImag[SAMPLES];
 
-ArduinoFFT<float> ThreeFFT = ArduinoFFT<float>(xReal, emptyImag, samples, samplingFrequency);
-ArduinoFFT<float> FourFFT = ArduinoFFT<float>(yReal, emptyImag, samples, samplingFrequency);
-ArduinoFFT<float> FiveFFT = ArduinoFFT<float>(zReal, emptyImag, samples, samplingFrequency);
-ArduinoFFT<float> SixFFT = ArduinoFFT<float>(zReal, emptyImag, samples, samplingFrequency);
+ArduinoFFT<float> fft(vReal, vImag, SAMPLES, SAMPLING_FREQUENCY);
 
-void setup() {
-  Serial.begin(9600);
-  CircuitPlayground.begin();
+void setup()
+{
+    Serial.begin(9600);
+    CircuitPlayground.begin();
+
+    // CircuitPlayground.setAccelRange(LIS3DH_RANGE_16_G);
 }
 
-void loop() {
+void loop()
+{
+    for (int i = 0; i < SAMPLES; i++)
+    {
+        float x = CircuitPlayground.motionX();
+        float y = CircuitPlayground.motionY();
+        float z = CircuitPlayground.motionZ();
 
-  X = CircuitPlayground.motionX();
-  Y = CircuitPlayground.motionY();
-  Z = CircuitPlayground.motionZ();
+        // Serial.print("x: ");
+        // Serial.println(x);
+        // Serial.print("y: ");
+        // Serial.println(y);
+        // Serial.print("z: ");
+        // Serial.println(z);
+        // Serial.println("----");
 
-  Serial.print("X: ");
-  Serial.print(X);
-  Serial.print("  Y: ");
-  Serial.print(Y);
-  Serial.print("  Z: ");
-  Serial.println(Z);
+        // vReal[i] = abs(sqrt(x * x + y * y + z * z) - 9.8);
+        vReal[i] = sqrt(x * x + y * y + z * z);
+        vImag[i] = 0;
 
-  //acc = sqrt((X*X)+(Y*Y)+(Z*Z));
-  //Serial.print("\nAcceleration: ");
-  //Serial.print(acc);
+        // Serial.print("sample number: ");
+        // Serial.println(i);
+        // Serial.println(vReal[i]);
 
-  ThreeFFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);
-  FourFFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);
-  FiveFFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);
-  SixFFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);
+        // Serial.println("-----");
 
-  ThreeFFT.compute(FFTDirection::Forward);
-  FourFFT.compute(FFTDirection::Forward);
-  FiveFFT.compute(FFTDirection::Forward);
-  SixFFT.compute(FFTDirection::Forward);
+        delay(1000 / SAMPLING_FREQUENCY);
+    }
 
-  ThreeFFT.complexToMagnitude();
-  FourFFT.complexToMagnitude();
-  FiveFFT.complexToMagnitude();
-  SixFFT.complexToMagnitude();
+    fft.dcRemoval();
 
-  float threeHz = ThreeFFT.majorPeak();
-  float fourHz = FourFFT.majorPeak();
-  float fiveHz = FiveFFT.majorPeak();
-  float sixHz = SixFFT.majorPeak();
+    // Serial.print("vReal after dc removal: ");
 
-  Serial.print("3Hz: ");
-  Serial.print(threeHz);
-  Serial.print(" 4Hz: ");
-  Serial.print(fourHz);
-  Serial.print(" 5Hz: ");
-  Serial.print(fiveHz);
-  Serial.print(" 6Hz: ");
-  Serial.println(sixHz);
+    // for (int i = 0; i < SAMPLES; i++)
+    // {
+    //     Serial.print(vReal[i]);
+    //     Serial.print(" ");
+    // }
+
+    // Serial.println("-----");
+
+    fft.windowing(FFTWindow::Hamming, FFTDirection::Forward);
+
+    // Serial.print("vReal after windowing: ");
+
+    // for (int i = 0; i < SAMPLES; i++)
+    // {
+    //     Serial.print(vReal[i]);
+    //     Serial.print(" ");
+    // }
+
+    // Serial.println("-----");
+
+    fft.compute(FFTDirection::Forward);
+
+    // Serial.print("vReal after compute: ");
+
+    // for (int i = 0; i < SAMPLES; i++)
+    // {
+    //     Serial.print(vReal[i]);
+    //     Serial.print(" ");
+    // }
+
+    // Serial.println("-----");
+
+    fft.complexToMagnitude();
+
+    // Serial.print("vReal after complex to magnitude: ");
+
+    // for (int i = 0; i < SAMPLES; i++)
+    // {
+    //     Serial.print(vReal[i]);
+    //     Serial.print(" ");
+    // }
+
+    // Serial.println("-----");
+
+    // float freq = fft.majorPeak();
+
+    float freq = fft.majorPeakParabola();
+
+    Serial.print("Frequency peak:");
+    Serial.println(freq);
+    // Serial.println("-----");
 }
