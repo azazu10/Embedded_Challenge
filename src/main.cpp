@@ -1,12 +1,13 @@
 #include <Arduino.h>
-// #define FFT_SPEED_OVER_PRECISION
-// #define FFT_SQRT_APPROXIMATION
-// #define USE_AVR_PROGMEM
+#define FFT_SPEED_OVER_PRECISION
+#define FFT_SQRT_APPROXIMATION
+#define USE_AVR_PROGMEM
 #include <arduinoFFT.h>
 #include <Adafruit_CircuitPlayground.h>
 
 #define SAMPLES 128           // Must be a power of 2 for FFT
 #define SAMPLING_FREQUENCY 32 // Hz, /2 for nyquest i.e. 24 Hz
+#define MAX_COUNT 10
 
 float samples = SAMPLES;
 
@@ -14,6 +15,10 @@ float vReal[SAMPLES];
 float vImag[SAMPLES];
 
 ArduinoFFT<float> fft(vReal, vImag, SAMPLES, SAMPLING_FREQUENCY);
+
+bool isTremorDetected = false;
+int tremorCount = 0;
+int total = 0;
 
 void setup()
 {
@@ -105,6 +110,37 @@ void loop()
     float freq = fft.majorPeakParabola();
 
     Serial.print("Frequency peak:");
-    Serial.println(freq);
+    Serial.print(freq);
     // Serial.println("-----");
+    total++;
+
+    if (freq >= 3 && freq <= 6)
+    {
+        tremorCount++;
+        CircuitPlayground.setPixelColor(tremorCount - 1, 255, 0, 0);
+        if (tremorCount >= MAX_COUNT)
+        {
+            if (!isTremorDetected)
+            {
+                isTremorDetected = true;
+
+                CircuitPlayground.playTone(500, 100);
+            }
+        }
+    }
+
+    else
+    {
+        if ((float(tremorCount) / float(total) < 0.75))
+        {
+            tremorCount = 0;
+            total = 0;
+            isTremorDetected = false;
+            CircuitPlayground.clearPixels();
+        }
+    }
+    Serial.print(" tremorcount: ");
+    Serial.print(tremorCount);
+    Serial.print(" total: ");
+    Serial.println(total);
 }
