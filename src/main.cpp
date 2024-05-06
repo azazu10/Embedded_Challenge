@@ -124,7 +124,16 @@ void loop()
             {
                 isTremorDetected = true;
 
-                CircuitPlayground.playTone(500, 100);
+                for (int i = 0; i <= 10; i++)
+                {
+                    CircuitPlayground.playTone(500, 100);
+                    delay(1000);
+                }
+
+                CircuitPlayground.clearPixels();
+                isTremorDetected = false;
+                total = 0;
+                tremorCount = 0;
             }
         }
     }
