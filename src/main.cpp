@@ -6,7 +6,7 @@
 #include <Adafruit_CircuitPlayground.h>
 
 #define SAMPLES 128           // Must be a power of 2 for FFT
-#define SAMPLING_FREQUENCY 48 // Hz, /2 for nyquest i.e. 24 Hz
+#define SAMPLING_FREQUENCY 32 // Hz, /2 for nyquest i.e. 24 Hz
 
 float samples = SAMPLES;
 
@@ -17,7 +17,7 @@ ArduinoFFT<float> fft(vReal, vImag, SAMPLES, SAMPLING_FREQUENCY);
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
     CircuitPlayground.begin();
 
     // CircuitPlayground.setAccelRange(LIS3DH_RANGE_16_G);
