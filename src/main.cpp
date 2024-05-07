@@ -124,14 +124,15 @@ void loop()
             {
                 isTremorDetected = true;
 
-                for (int i = 0; i <= 10; i++)
-                {
-                    CircuitPlayground.playTone(500, 100);
-                    delay(1000);
+                // Continuous beeping until the left button is pressed
+                while (!CircuitPlayground.leftButton()){
+                  CircuitPlayground.playTone(500,100);
+                  delay(100);
                 }
 
                 CircuitPlayground.clearPixels();
                 isTremorDetected = false;
+                Serial.println("\nReset Tremor Detection");
                 total = 0;
                 tremorCount = 0;
             }
